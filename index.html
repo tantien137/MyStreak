@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Streak</title>
+  <link rel="shortcut icon" href="assets/images/favicon.png" type="image/x-icon">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div class="btnPanel">
+    <div class="timerAndBtn">
+      <p id="timer">00:00</p>
+      <button id="timerControlBtn">Focus</button>
+    </div>
+    <div class="debugPanel">
+      <button id="clearcacheBtn">Clear cache</button>
+    </div>
+  </div>
+  <div class="statisticsPanel">
+    <div class="currentStreak">
+      <div id="streakRecords">
+        <p id="dayStarted">10-08-2026</p>
+        <p id="hoursFocusThisWeek">0 hours</p>
+        <p id="hoursNeededForWeek">12 hours</p>
+      </div>
+      <div id="streak">
+        <img src="assets/images/StreakGif.gif" id="streakFire">
+        <div id="streakAndAvgFocusHour">
+          <p id="weeksInStreak">0 weeks</p>
+          <p id="avgFocusHour">with 0 hours/week</p>
+        </div>
+      </div>
+      <p>Today focus hours: 0/(average hours to be enough) hours</p>
+    </div>
+    <div id="history">
+      <details id="originalHistoryDetail" class="historyDetails hidden">
+        <summary></summary>
+      </details>
+    </div>
+  </div>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
