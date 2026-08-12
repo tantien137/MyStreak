@@ -9,9 +9,8 @@ let currentSession = JSON.parse(localStorage.getItem('currentSession'));
 let currentTimer = Number(localStorage.getItem('currentTimer')) ?? 0;
 let interval = undefined;
 const delay = 1;
+// console.log((new Date(Date.now())).getFullYear());
 let history = getHistory();
-let days = getDays();
-console.log(history);
 
 // Procedure
 if (currentSession!=undefined) {
@@ -21,23 +20,9 @@ if (currentSession!=undefined) {
 }
 
 if (history.length>0) {
-  let daysName = Object.keys(days);
-  for (let day of daysName) {
-    let historyDetailClone = originalHistoryDetail.cloneNode(true);
-    let sumOfTime = days[day].reduce((sum, {sessionTime}) => sum+=sessionTime, 0);
-    let [minutes, seconds] = getMinuteAndSecond(sumOfTime);
-    historyDetailClone.querySelector('summary').innerHTML = `${day.replaceAll('/', '-')} (${minutes} minutes ${seconds} seconds)`;
-    historyDetailClone.classList.remove("hidden");
-    historyPanel.prepend(historyDetailClone);
-    for (let session of days[day]) {
-      const timeDetailPara = document.createElement('p');
-      timeDetailPara.classList.add('timeDetail');
-      let [minutes, seconds] = getMinuteAndSecond(session.sessionTime);
-      timeDetailPara.innerHTML = `${(new Date(session.timeStarted)).toLocaleTimeString('vi-VN')} (${minutes} minutes ${seconds} seconds)`
-      historyDetailClone.prepend(timeDetailPara);
-    }
-  }
+  
 }
+
 else {
   const announcePara = document.createElement('p');
   announcePara.innerHTML = 'No session have been save.'
@@ -62,9 +47,13 @@ document.addEventListener('visibilitychange', () => {
 })
 
 // Functions
-
-function sortHistory() {
-  
+function updateHistoryPanel() {
+  for (let dateObj of groupByDates) {
+    let historyDetailClone = originalHistoryDetail.cloneNode(true);
+    let totalTime = dateObj.session.reduce((total, {sessionTime}) => total+=sessionTime, 0);
+    let [minutes, seconds] = getMinuteAndSecond(totalTime);
+    
+  }
 }
 
 function getMinuteAndSecond(timeInSecond) {
@@ -73,19 +62,12 @@ function getMinuteAndSecond(timeInSecond) {
   return [minutes, seconds];
 }
 
-function getDays() {
-  return history.reduce((dayGroups, session) => {
-    let sessionDate = new Date(session.timeStarted).toLocaleDateString('vi-VN')
-    for (let groupName of Object.keys(dayGroups)) {
-      if (sessionDate == groupName) {
-        dayGroups[groupName].push(session);
-        return dayGroups;
-      }
-    }
-    dayGroups[sessionDate] = [];
-    dayGroups[sessionDate].push(session);
-    return dayGroups;
-  }, {})
+function getHistoryGroupByWeeks() {
+
+}
+
+function getHistoryGroupByMonth() {
+  
 }
 
 function getHistory() {
@@ -95,17 +77,35 @@ function getHistory() {
 function saveSession(preProcessSession) {
   let session = preProcessSession;
   session.sessionTime = currentTimer;
-  history.push(session);
-  historyPanel.querySelectorAll('details').forEach((detailsTag) => {
-    if (detailsTag.querySelector('summary').innerHTML.slice(0, 9)==(new Date(session.timeStarted).toLocaleDateString('vi-VN').replaceAll('/', '-'))) {
-      console.log('hello');
-      const timeDetailPara = document.createElement('p');
-      timeDetailPara.classList.add('timeDetail');
-      let [minutes, seconds]= getMinuteAndSecond(session.sessionTime);
-      timeDetailPara.innerHTML = `${(new Date(session.timeStarted)).toLocaleTimeString('vi-VN')} (${minutes} minutes ${seconds} seconds)`
-      detailsTag.prepend(timeDetailPara);
+  let sessionDateObj = new Date(session.timeStarted);
+  let date = sessionDateObj.getDate();
+  let month = sessionDateObj.getMonth();
+  let year = sessionDateObj.getFullYear();
+  for (let i = 0; i<history.length; i++) {
+    if (history[i].date == date &&
+        history[i].month == month &&
+        history[i].year == year) 
+    {
+      history[i].sessions.push(session);
     }
-  })
+  }
+  let dateObj = {
+    'date' : date,
+    'month' : month,
+    'year' : year,
+    'sessions' : [] 
+  };
+  dateObj.sessions.push(session);
+  history.push(dateObj);
+  history = sortFunc(unsortedGroupByDates, (min, current) => {
+    if (min.year == current.year) {
+      if (min.month == current.month) {
+        return min.date > current.date;
+      }
+      else return min.month>current.month;
+    }
+    else return min.year>current.year;
+  });
   localStorage.setItem('history', JSON.stringify(history));
 }
 
