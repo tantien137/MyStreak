@@ -2,14 +2,12 @@
 const timerPara = document.getElementById('timer');
 const timerControlBtn = document.getElementById('timerControlBtn');
 const historyPanel = document.getElementById('history');
-const originalHistoryDetail = document.getElementById('originalHistoryDetail');
 
 // Bindings
 let currentSession = JSON.parse(localStorage.getItem('currentSession'));
 let currentTimer = Number(localStorage.getItem('currentTimer')) ?? 0;
 let interval = undefined;
 const delay = 1;
-// console.log((new Date(Date.now())).getFullYear());
 let history = getHistory();
 
 // Procedure
@@ -22,7 +20,6 @@ if (currentSession!=undefined) {
 if (history.length>0) {
   
 }
-
 else {
   const announcePara = document.createElement('p');
   announcePara.innerHTML = 'No session have been save.'
@@ -47,27 +44,20 @@ document.addEventListener('visibilitychange', () => {
 })
 
 // Functions
-function updateHistoryPanel() {
-  for (let dateObj of groupByDates) {
-    let historyDetailClone = originalHistoryDetail.cloneNode(true);
-    let totalTime = dateObj.session.reduce((total, {sessionTime}) => total+=sessionTime, 0);
-    let [minutes, seconds] = getMinuteAndSecond(totalTime);
-    
-  }
+function getMonthInText(month) {
+  let monthList = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return monthList[month];
+}
+
+function getDayInText(day) {
+  let dayList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return dayList[day];
 }
 
 function getMinuteAndSecond(timeInSecond) {
   let minutes = String(Math.floor(timeInSecond/60)).padStart(2, 0);
   let seconds = String(timeInSecond%60).padStart(2, 0);
   return [minutes, seconds];
-}
-
-function getHistoryGroupByWeeks() {
-
-}
-
-function getHistoryGroupByMonth() {
-  
 }
 
 function getHistory() {
@@ -77,42 +67,41 @@ function getHistory() {
 function saveSession(preProcessSession) {
   let session = preProcessSession;
   session.sessionTime = currentTimer;
+
   let sessionDateObj = new Date(session.timeStarted);
   let date = sessionDateObj.getDate();
   let month = sessionDateObj.getMonth();
   let year = sessionDateObj.getFullYear();
-  for (let i = 0; i<history.length; i++) {
-    if (history[i].date == date &&
-        history[i].month == month &&
-        history[i].year == year) 
-    {
-      history[i].sessions.push(session);
+  
+  let layerCount = 3;
+  let yearExisting = history.find((yearObj) => yearObj.year == year);
+  if (yearExisting!=undefined) {
+    // This block run if year of the session already exist
+    layerCount--;
+    let monthExisting = yearExisting.months.find((monthObj) => monthObj.month == month);
+    if (monthExisting!=undefined) {
+      layerCount--;
+      let dateExisting = month.dates.find((dateObj) => dateObj.date == date);
+      if (dateExisting!=undefined) {
+        layerCount--;
+        let sessionExisting = dateExisting.sessions.find((existingSession) => existingSession.timeStarted == session.timeStarted);
+        if (sessionExisting==undefined) {
+          dateExisting.sessions.push(session);
+        }
+      }
     }
   }
-  let dateObj = {
-    'date' : date,
-    'month' : month,
-    'year' : year,
-    'sessions' : [] 
-  };
-  dateObj.sessions.push(session);
-  history.push(dateObj);
-  history = sortFunc(unsortedGroupByDates, (min, current) => {
-    if (min.year == current.year) {
-      if (min.month == current.month) {
-        return min.date > current.date;
-      }
-      else return min.month>current.month;
-    }
-    else return min.year>current.year;
-  });
+  if (layerCount < 3) {
+    
+  }
   localStorage.setItem('history', JSON.stringify(history));
 }
 
 function createSession() {
-  return session = {
+  return {
     'timeStarted' : Date.now(),
-    'sessionTime' : 0
+    'sessionTime' : 0,
+    'htmlObj' : null
   }
 }   
 
