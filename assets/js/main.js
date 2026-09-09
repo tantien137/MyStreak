@@ -1,5 +1,6 @@
 // Debug
 console.log(localStorage);
+
 const clearcacheBtn = document.getElementById('clearcacheBtn');
 clearcacheBtn.addEventListener('click', () => {
   localStorage.clear();
@@ -23,16 +24,31 @@ insertToHistory.addEventListener('click', () => {
 const timerPara = document.getElementById('timer');
 const timerControlBtn = document.getElementById('timerControlBtn');
 const historyPanel = document.getElementById('history');
+const owningTimePara = document.getElementById('hoursNeededForStreak');
 
 // Bindings
+let startedDate = (new Date(2026, 7, 10)).getTime();
 let currentSession = JSON.parse(localStorage.getItem('currentSession'));
 let currentTimer = Number(localStorage.getItem('currentTimer')) ?? 0;
 let interval = undefined;
 const delay = 1;
 let history = getHistory();
-let lastedSession = null;
+let lastAddedSession = null;
+let weeks = getWeeks();
+console.log(weeks);
+let totalTimeFocused = totalFocusTime()/60;
+let owningTime = (weeks*10*60-totalTimeFocused<0) ? 0 : weeks*10*60-totalTimeFocused;
+console.log(owningTime);
+// if you don't want to set day start to count, uncomment this code to make it auto take the first day you use
+// let startedDate = history[0].timeStarted;
 
 // Procedure
+if (owningTime>0) {
+  let owningHours = Math.floor(owningTime/60);
+  let owningMins = Math.floor(owningTime%60);
+  owningTimePara.innerHTML = `${owningHours} hours ${owningMins} minutes`;
+}
+
 if (currentSession!=undefined) {
   let [minutes, seconds] = getMinuteAndSecond(currentTimer);
   timerPara.innerHTML = `${minutes}:${seconds}`;
@@ -66,8 +82,30 @@ document.addEventListener('visibilitychange', () => {
 })
 
 // Functions
+function totalFocusTime() {
+  return history.reduce((currentTime, session) => {
+    return currentTime+=session.sessionTime;
+  }, 0);
+}
+
+function getWeeks() {
+  let today = new Date();
+  let minusNum = (today.getDay()==0) ? 7 : today.getDay();
+  let weeks = Math.ceil((totalDaysBeetween(today.getTime(), startedDate)-(minusNum))/7);
+  return weeks;
+}
+
+function totalDaysBeetween(timeStamp1, timeStamp2) {
+  return (timeStamp1-timeStamp2)/(1000*60*60*24);
+}
+
 function initialHistoryPanel() {
   for (let session of history) {
+    addSessionToHistoryPanel(session);
+  }
+}
+
+function addSessionToHistoryPanel(session) {
     let sessionDate = new Date(session.timeStarted);
     let date = sessionDate.getDate();
     let month = sessionDate.getMonth();
@@ -76,39 +114,41 @@ function initialHistoryPanel() {
     sessionParaTag.innerHTML = sessionDate.toLocaleTimeString('vi-VN');
     let dateDetailTag = document.getElementById(`h_${year}_${month}_${date}`);
     if (dateDetailTag==null) {
-      dateDetailTag = document.createElement('details');
-      dateDetailTag.id = `h_${year}_${month}_${date}`;
-      dateDetailTag.classList.add('dateDetail');
-      let dateSummary = document.createElement('summary');
+      let dateSummary;
+      [dateDetailTag, dateSummary] = createHistoryDateContainer(`h_${year}_${month}_${date}`);
       dateSummary.innerHTML = `${getDayText(sessionDate.getDay())} ${getMonthText(month)} ${date} ${year}`;
-      dateDetailTag.prepend(dateSummary);
       let monthDetailTag = document.getElementById(`h_${year}_${month}`);
       if (monthDetailTag==null) {
-        monthDetailTag = document.createElement('details');
-        monthDetailTag.id = `h_${year}_${month}`;
-        monthDetailTag.classList.add('monthDetail');
-        let monthSummary = document.createElement('summary');
+        let monthSummary;
+        [monthDetailTag, monthSummary] = createHistoryDateContainer(`h_${year}_${month}`);
         monthSummary.innerHTML = `${getMonthText(month)}`;
-        monthDetailTag.prepend(monthSummary);
         let yearDetailTag = document.getElementById(`h_${year}`);
         if (yearDetailTag==null) {
-          console.log(sessionDate);
-          yearDetailTag = document.createElement('details');
-          yearDetailTag.id = `h_${year}`;
-          yearDetailTag.classList.add('yearDetail');
-          let yearSummary = document.createElement('summary');
+          let yearSummary;
+          [yearDetailTag, yearSummary] = createHistoryDateContainer(`h_${year}`);
           yearSummary.innerHTML = `${year}`;
-          yearDetailTag.prepend(yearSummary);
-          historyPanel.append(yearDetailTag);
+          historyPanel.prepend(yearDetailTag);
         }
         yearDetailTag.append(monthDetailTag);
       }
       monthDetailTag.append(dateDetailTag);
     }
     dateDetailTag.append(sessionParaTag);
-  }
 }
 
+function createHistoryDateContainer(id) {
+  let detailsTag = document.createElement('details');
+  detailsTag.id = id;
+  detailsTag.classList.add('dateDetail');
+  let detailsSummary = document.createElement('summary');
+  detailsTag.prepend(detailsSummary);
+  return [detailsTag, detailsSummary];
+}
+
+function updateHistorySection() {
+  addSessionToHistoryPanel(lastAddedSession);
+  if ((lastAddedSession.timeStarted-startedDate)<0) startedDate = lastAddedSession.timeStarted;
+}
 
 function getMonthText(month) {
   return ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][month];
@@ -145,7 +185,7 @@ function saveSession(session) {
   }
   history[i+1] = session;
   localStorage.setItem('history', JSON.stringify(history));
-  lastedSession = history[i+1];
+  lastAddedSession = history[i+1];
 }
 
 function createSession() {
@@ -170,6 +210,7 @@ function endTimer() {
   localStorage.removeItem('currentSession');
   timerPara.innerHTML = '00:00';
   timerControlBtn.innerHTML = "Focus";
+  updateHistorySection();
 }
 
 function changeTimer() {
