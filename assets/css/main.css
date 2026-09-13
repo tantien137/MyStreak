@@ -162,7 +162,7 @@ body > .statisticsPanel > .currentStreak > .streakWrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: min(1.1rem, 7cqw);
+  font-size: min(0.9rem, 4cqw);
   font-family: 'Archivo Black', sans-serif;
   color: var(--text-color);
 }

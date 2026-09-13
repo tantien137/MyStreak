@@ -37,18 +37,14 @@ let history = getHistory();
 let lastAddedSession = null;
 let weeks = getWeeks();
 let totalTimeFocused = totalFocusTime();
-let debtTime = (weeks*10*60-totalTimeFocused<0) ? 0 : weeks*10*60-totalTimeFocused;
+let debtTime = (weeks*10*60-totalTimeFocused/60<0) ? 0 : weeks*10*60-totalTimeFocused/60;
 // if you don't want to set day start to count, uncomment this code to make it auto take the first day you use
 // let startDate = history[0].timeStarted;
 
 // Procedure
 updateTotalTime();
+updateDebtTime();
 
-if (debtTime>0) {
-  let debtHours = Math.floor(debtTime/60);
-  let debtMins = Math.floor(debtTime%60);
-  debtTimePara.innerHTML = `${debtHours} hours ${debtMins} minutes`;
-}
 
 if (currentSession!=undefined) {
   let [minutes, seconds] = getMinuteAndSecond(currentTimer);
@@ -87,9 +83,18 @@ document.addEventListener('visibilitychange', () => {
 })
 
 // Functions
-function updateHoursNeeded() {
+function updateDebtTime() {
+  debtTime = (weeks*10*60-totalTimeFocused/60<0) ? 0 : weeks*10*60-totalTimeFocused/60;
   if (debtTime>0) {
-    debtTimePara.innerHTML = "Time needs to get streak: "
+    let debtHours = Math.floor(debtTime/60);
+    let debtMins = Math.floor(debtTime%60);
+    debtTimePara.innerHTML = `Time left to get streak: ${debtHours} hours ${debtMins} minutes`;
+  }
+  else {
+    let hoursNeed = ((weeks+1)*10*60-totalTimeFocused<0) ? 0 : (weeks+1)*10*60-totalTimeFocused;
+    let hour = Math.floor(hoursNeed/60);
+    let mins = Math.floor(hoursNeed%60);
+    debtTimePara.innerHTML = `Time need to hold this streak: ${hour} hours ${mins} minutes`;
   }
 }
 
@@ -97,6 +102,7 @@ function updateTotalTime() {
   totalTimeFocused = totalFocusTime();
   let [mins, seconds] = getMinuteAndSecond(totalTimeFocused);
   totalTimePara.innerHTML = `Total Time Focused: ${mins} minutes ${seconds} seconds`;
+  updateDebtTime();
 }
 
 function totalFocusTime() {
