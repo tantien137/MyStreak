@@ -5,7 +5,7 @@
 }
 
 :root {
-  --main_color: rgb(0,0,0);
+  --transparent_windows_color: rgba(0,0,0, 0.80);
   --secondary_color: white;
   --light-color: rgba(154, 154, 154, 0.9);
   --text-color: white;
@@ -52,13 +52,243 @@ body > .btnPanel > .timerAndBtn {
   padding: 1rem;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   container-type: inline-size;
+  align-items: center;
+  box-shadow: 0 0.6rem 10px 3px rgba(0,0,0,0.8);
 }
 
-body > .btnPanel > .timerAndBtn > #timer {
-  font-size: 35cqw; 
+#timer {
+  font-size: min(33cqw, 8rem);
+  font-family: "Archivo Black", sans-serif;
+  text-align: center;
+  font-weight: 700;
+  color: #504e4e;
+  text-shadow: 0 0.5rem rgba(0,0,0,0.30);
+  user-select: none;
+}
+
+#timerControlBtn {
+  width: min(8rem, 42cqw);
+  height: 2rem;
+  border-radius: var(--radius-value);
+  background: linear-gradient(to right, #ffde59, #ff914d);
+  color: var(--text-color);
+  font-weight: bold;
+  font-size: 1.3rem;
+  font-family: "Fugaz One", sans-serif;
+  border: none;
+  box-shadow: 0 0.3rem 3px rgba(0,0,0,0.45);
+}
+
+#timerControlBtn:hover {
+  cursor: pointer;
 }
 
 body > .statisticsPanel {
-  width: 40%;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+}
+
+body > .statisticsPanel > .currentStreak {
+  width: min(100%, 30rem);
+  height: 12rem;
+  padding: 0.2rem;
+  background-color: var(--transparent_windows_color);
+  border-radius: var(--radius-value);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  container-type: inline-size;
+}
+
+#history {
+  width: 100%;
+  height: 25rem;
+  padding: 0.8rem;
+  background-color: var(--transparent_windows_color);
+  border-radius: var(--radius-value);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+body > .statisticsPanel > .currentStreak > .streakWrapper {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+#streak {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  padding-top: 0.8rem;
+}
+
+#streak > img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  opacity: 100%;
+}
+
+#streakRecords {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  container-type: inline-size;
+  width: 100%;
+}
+
+#totalStreak {
+  font-family: 'Titan One', sans-serif;
+  font-size: min(3.2rem, 25cqw);
+  text-align: center;
+  color: var(--text-color);
+  text-shadow: 0 0.4rem rgba(0,0,0,0.80);
+}
+
+#hoursNeeded {
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: min(1.1rem, 7cqw);
+  font-family: 'Archivo Black', sans-serif;
+  color: var(--text-color);
+}
+
+.totalHoursWrapper {
+  padding: 0 1rem;
+  padding-top: 0.5rem;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  height: 1.2rem;
+  container-type: inline-size;
+}
+
+#totalTime {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-color);
+  font-weight: bold;
+  font-style: italic;
+  font-size: min(1rem, 5cqw);
+}
+
+summary {
+  user-select: none;
+}
+
+.yearDetail {
+  width: 100%;
+}
+
+.yearDetail > summary,
+.monthDetail > summary,
+.dateDetail > summary {
+  display: flex;
+  align-items: center;
+  padding: 0 0.6rem;
+  color: white;
+  font-weight: bold;
+  height: 2rem;
+  background-color: rgba(0,0,0,0.6);
+  list-style: none;
+  cursor: pointer;
+  border-radius: var(--radius-value);
+}
+
+.yearDetail > summary::before {
+  content: "▶";
+  font-size: 0.6rem;
+  padding: 0 0.4rem;
+  transition: transform 0.2s ease;
+}
+
+.yearDetail[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.yearDetail > .content, 
+.monthDetail > .content,
+.dateDetail > .content {
+  margin: 0.2rem 0;
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+}
+
+.monthDetail {
+  width: 100%;
+}
+
+.monthDetail > summary {
+  background-color: rgba(0,0,0,0.40);
+}
+
+.monthDetail > summary::before {
+  display: inline-block;
+  width: 0.6rem;
+  content: "+";
+  font-weight: bolder;
+  font-size: 0.8rem;
+  padding: 0 0.4rem;
+}
+
+.monthDetail[open] > summary::before {
+  content: "\2212";
+}
+
+.dateDetail > summary {
+  background-color: rgba(0,0,0, 0.80);
+}
+
+.dateDetail {
+  position: relative;
+}
+
+.dateDetail::before {
+  content: "";
+  display: inline-block;
+  height: calc(100% - 2rem);
+  width: 1rem;
+  position: absolute;
+  transform: translate(0.5rem, 2rem);
+}
+
+.dateDetail[open]::before {
+  border-left: 3px solid white;
+}
+
+.dateDetail > .content > p {
+  color: white;
+  font-weight: bolder;
+}
+
+#emptyMsgWrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#emptyHistoryMsg {
+  font-size: 1.2rem;
+  color: white;
+  font-weight: bold;
+  font-style: italic;
+  text-align: center;
 }

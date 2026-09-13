@@ -1,8 +1,8 @@
 // Debug
 console.log(localStorage);
 
-const clearcacheBtn = document.getElementById('clearcacheBtn');
-clearcacheBtn.addEventListener('click', () => {
+const clearCacheBtn = document.getElementById('clearCacheBtn');
+clearCacheBtn.addEventListener('click', () => {
   localStorage.clear();
 })
 const runTestCodeBtn = document.getElementById('runTestCode');
@@ -14,8 +14,8 @@ const insertToHistory = document.getElementById('insertToHistory');
 insertToHistory.addEventListener('click', () => {
   const dates = dateInput.value.split('/');
   saveSession({
-    timeStarted: (new Date(Number(dates[2]), Number(dates[1]), Number(dates[0]))).getTime(),
-    sessionTime: 1000
+    timeStarted: (new Date(Number(dates[2]), Number(dates[1])-1, Number(dates[0]))).getTime(),
+    duration: 1000
   })
   console.log(history);
 })
@@ -24,10 +24,11 @@ insertToHistory.addEventListener('click', () => {
 const timerPara = document.getElementById('timer');
 const timerControlBtn = document.getElementById('timerControlBtn');
 const historyPanel = document.getElementById('history');
-const owningTimePara = document.getElementById('hoursNeededForStreak');
+const debtTimePara = document.getElementById('hoursNeeded');
+const totalTimePara = document.getElementById('totalTime');
 
 // Bindings
-let startedDate = (new Date(2026, 7, 10)).getTime();
+let startDate = (new Date(2026, 7, 10)).getTime();
 let currentSession = JSON.parse(localStorage.getItem('currentSession'));
 let currentTimer = Number(localStorage.getItem('currentTimer')) ?? 0;
 let interval = undefined;
@@ -35,18 +36,18 @@ const delay = 1;
 let history = getHistory();
 let lastAddedSession = null;
 let weeks = getWeeks();
-console.log(weeks);
-let totalTimeFocused = totalFocusTime()/60;
-let owningTime = (weeks*10*60-totalTimeFocused<0) ? 0 : weeks*10*60-totalTimeFocused;
-console.log(owningTime);
+let totalTimeFocused = totalFocusTime();
+let debtTime = (weeks*10*60-totalTimeFocused<0) ? 0 : weeks*10*60-totalTimeFocused;
 // if you don't want to set day start to count, uncomment this code to make it auto take the first day you use
-// let startedDate = history[0].timeStarted;
+// let startDate = history[0].timeStarted;
 
 // Procedure
-if (owningTime>0) {
-  let owningHours = Math.floor(owningTime/60);
-  let owningMins = Math.floor(owningTime%60);
-  owningTimePara.innerHTML = `${owningHours} hours ${owningMins} minutes`;
+updateTotalTime();
+
+if (debtTime>0) {
+  let debtHours = Math.floor(debtTime/60);
+  let debtMins = Math.floor(debtTime%60);
+  debtTimePara.innerHTML = `${debtHours} hours ${debtMins} minutes`;
 }
 
 if (currentSession!=undefined) {
@@ -56,12 +57,16 @@ if (currentSession!=undefined) {
 }
 
 if (history.length>0) {
-  initialHistoryPanel();
+  initHistoryPanel();
 }
 else {
-  const announcePara = document.createElement('p');
-  announcePara.innerHTML = 'No session have been save.'
-  historyPanel.appendChild(announcePara);
+  const emptyMsgWrapper = document.createElement('div');
+  emptyMsgWrapper.id = `emptyMsgWrapper`;
+  const emptyHistoryMsg = document.createElement('p');
+  emptyHistoryMsg.id = `emptyHistoryMsg`;
+  emptyHistoryMsg.innerHTML = 'No sessions have been saved.'
+  emptyMsgWrapper.append(emptyHistoryMsg);
+  historyPanel.appendChild(emptyMsgWrapper);
 }
 
 // Events
@@ -82,24 +87,36 @@ document.addEventListener('visibilitychange', () => {
 })
 
 // Functions
+function updateHoursNeeded() {
+  if (debtTime>0) {
+    debtTimePara.innerHTML = "Time needs to get streak: "
+  }
+}
+
+function updateTotalTime() {
+  totalTimeFocused = totalFocusTime();
+  let [mins, seconds] = getMinuteAndSecond(totalTimeFocused);
+  totalTimePara.innerHTML = `Total Time Focused: ${mins} minutes ${seconds} seconds`;
+}
+
 function totalFocusTime() {
-  return history.reduce((currentTime, session) => {
-    return currentTime+=session.sessionTime;
+  return history.reduce((totalSeconds, session) => {
+    return totalSeconds+=session.duration;
   }, 0);
 }
 
 function getWeeks() {
   let today = new Date();
   let minusNum = (today.getDay()==0) ? 7 : today.getDay();
-  let weeks = Math.ceil((totalDaysBeetween(today.getTime(), startedDate)-(minusNum))/7);
+  let weeks = Math.ceil((totalDaysBetween(today.getTime(), startDate)-(minusNum))/7);
   return weeks;
 }
 
-function totalDaysBeetween(timeStamp1, timeStamp2) {
+function totalDaysBetween(timeStamp1, timeStamp2) {
   return (timeStamp1-timeStamp2)/(1000*60*60*24);
 }
 
-function initialHistoryPanel() {
+function initHistoryPanel() {
   for (let session of history) {
     addSessionToHistoryPanel(session);
   }
@@ -110,44 +127,54 @@ function addSessionToHistoryPanel(session) {
     let date = sessionDate.getDate();
     let month = sessionDate.getMonth();
     let year = sessionDate.getFullYear();
-    let sessionParaTag = document.createElement('p');
-    sessionParaTag.innerHTML = sessionDate.toLocaleTimeString('vi-VN');
-    let dateDetailTag = document.getElementById(`h_${year}_${month}_${date}`);
-    if (dateDetailTag==null) {
+    let sessionPara = document.createElement('p');
+    let [mins, seconds] = getMinuteAndSecond(session.duration);
+    sessionPara.innerHTML = `${sessionDate.toLocaleTimeString('vi-VN')} - ${mins} minutes ${seconds} seconds`;
+    let dateDetail = document.getElementById(`h_${year}_${month}_${date}`);
+    if (dateDetail==null) {
       let dateSummary;
-      [dateDetailTag, dateSummary] = createHistoryDateContainer(`h_${year}_${month}_${date}`);
-      dateSummary.innerHTML = `${getDayText(sessionDate.getDay())} ${getMonthText(month)} ${date} ${year}`;
-      let monthDetailTag = document.getElementById(`h_${year}_${month}`);
-      if (monthDetailTag==null) {
+      [dateDetail, dateSummary] = createHistoryDateContainer(`h_${year}_${month}_${date}`);
+      dateDetail.classList.add('dateDetail');
+      dateSummary.innerHTML = `${getDayText(sessionDate.getDay())}, ${sessionDate.getDate()}`;
+      let monthDetail = document.getElementById(`h_${year}_${month}`);
+      if (monthDetail==null) {
         let monthSummary;
-        [monthDetailTag, monthSummary] = createHistoryDateContainer(`h_${year}_${month}`);
+        [monthDetail, monthSummary] = createHistoryDateContainer(`h_${year}_${month}`);
+        monthDetail.classList.add('monthDetail');
         monthSummary.innerHTML = `${getMonthText(month)}`;
-        let yearDetailTag = document.getElementById(`h_${year}`);
-        if (yearDetailTag==null) {
+        let yearDetail = document.getElementById(`h_${year}`);
+        if (yearDetail==null) {
           let yearSummary;
-          [yearDetailTag, yearSummary] = createHistoryDateContainer(`h_${year}`);
+          [yearDetail, yearSummary] = createHistoryDateContainer(`h_${year}`);
+          yearDetail.classList.add('yearDetail');
           yearSummary.innerHTML = `${year}`;
-          historyPanel.prepend(yearDetailTag);
+          historyPanel.prepend(yearDetail);
         }
-        yearDetailTag.append(monthDetailTag);
+        yearDetail.querySelector('.content').append(monthDetail);
       }
-      monthDetailTag.append(dateDetailTag);
+      monthDetail.querySelector('.content').append(dateDetail);
     }
-    dateDetailTag.append(sessionParaTag);
+    dateDetail.querySelector('.content').append(sessionPara);
 }
 
 function createHistoryDateContainer(id) {
-  let detailsTag = document.createElement('details');
-  detailsTag.id = id;
-  detailsTag.classList.add('dateDetail');
+  let details = document.createElement('details');
+  details.id = id;
   let detailsSummary = document.createElement('summary');
-  detailsTag.prepend(detailsSummary);
-  return [detailsTag, detailsSummary];
+  details.prepend(detailsSummary);
+  let contentDiv = document.createElement('div');
+  contentDiv.classList.add('content');
+  details.append(contentDiv);
+  return [details, detailsSummary];
 }
 
 function updateHistorySection() {
+  const emptyMsgWrapper = document.getElementById('emptyMsgWrapper');
+  if (emptyMsgWrapper) {
+    emptyMsgWrapper.remove();
+  }
   addSessionToHistoryPanel(lastAddedSession);
-  if ((lastAddedSession.timeStarted-startedDate)<0) startedDate = lastAddedSession.timeStarted;
+  if ((lastAddedSession.timeStarted-startDate)<0) startDate = lastAddedSession.timeStarted;
 }
 
 function getMonthText(month) {
@@ -155,7 +182,7 @@ function getMonthText(month) {
 }
 
 function getDayText(day) {
-  return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day];
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day];
 }
 
 function getMinuteAndSecond(timeInSecond) {
@@ -169,40 +196,27 @@ function getHistory() {
 }
 
 function saveSession(session) {
-  let i = history.length-1;
-  while (i>-1 && session.timeStarted<history[i].timeStarted) {
-    i--;
-  }
-  let anotherIndex = history.length-1;
-  /* 
-   Create new element in the end of history array
-   to start move session newer than current session forward
-  */
-  history.push(history[anotherIndex]);
-  while (anotherIndex>i+1) {
-    history[anotherIndex] = history[anotherIndex-1];
-    anotherIndex--;
-  }
-  history[i+1] = session;
+  history.push(session);
+  history.sort((a, b) => a.timeStarted - b.timeStarted);
   localStorage.setItem('history', JSON.stringify(history));
-  lastAddedSession = history[i+1];
+  lastAddedSession = session;
 }
 
 function createSession() {
-  return session = {
+  return {
     'timeStarted' : Date.now(),
-    'sessionTime' : 0
+    'duration' : 0
   }
 }   
 
 function startTimer() {
-  interval = mySetInterval(changeTimer, delay*1000);
+  interval = mySetInterval(tickTimer, delay*1000);
   timerControlBtn.innerHTML = "End Session";
 }
 
 function endTimer() {
   clearTimeout(interval.id);
-  currentSession.sessionTime = currentTimer;
+  currentSession.duration = currentTimer;
   saveSession(currentSession);
   currentTimer = 0;
   currentSession = undefined;
@@ -211,9 +225,10 @@ function endTimer() {
   timerPara.innerHTML = '00:00';
   timerControlBtn.innerHTML = "Focus";
   updateHistorySection();
+  updateTotalTime();
 }
 
-function changeTimer() {
+function tickTimer() {
   currentTimer += delay;
   localStorage.setItem('currentTimer', currentTimer);
   let [minutes, seconds] = getMinuteAndSecond(currentTimer);
