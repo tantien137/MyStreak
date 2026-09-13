@@ -107,15 +107,29 @@ body > .statisticsPanel > .currentStreak {
   container-type: inline-size;
 }
 
-#history {
+#lowerStaticsPanel {
   width: 100%;
   height: 25rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+#lowerStaticsPanel > * {
+  width: 49%;
+}
+
+#history {
+  height: 100%;
   padding: 0.8rem;
   background-color: var(--transparent_windows_color);
   border-radius: var(--radius-value);
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+}
+
+#notesPanel {
+  background-color: yellow;
 }
 
 body > .statisticsPanel > .currentStreak > .streakWrapper {
