@@ -118,7 +118,7 @@ body > .statisticsPanel > .currentStreak {
   width: 49%;
 }
 
-#history {
+#history, #notesPanel {
   height: 100%;
   padding: 0.8rem;
   background-color: var(--transparent_windows_color);
@@ -126,10 +126,24 @@ body > .statisticsPanel > .currentStreak {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  position: relative;
 }
 
 #notesPanel {
-  background-color: yellow;
+  background-color: rgb(255, 255, 255);
+}
+
+#history::before, #notesPanel::before {
+  content: "History";
+  color: var(--text-color);
+  opacity: 90%;
+  font-weight: bolder;
+  position: absolute;
+  transform: translateY(-175%);
+}
+
+#notesPanel::before {
+  content: "Note";
 }
 
 body > .statisticsPanel > .currentStreak > .streakWrapper {
