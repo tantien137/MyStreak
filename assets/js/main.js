@@ -26,6 +26,8 @@ const timerControlBtn = document.getElementById('timerControlBtn');
 const historyPanel = document.getElementById('history');
 const debtTimePara = document.getElementById('hoursNeeded');
 const totalTimePara = document.getElementById('totalTime');
+const streakFire = document.getElementById('streakFire');
+const totalStreak = document.getElementById('totalStreak');
 
 // Bindings
 let startDate = (new Date(2026, 7, 10)).getTime();
@@ -86,12 +88,16 @@ document.addEventListener('visibilitychange', () => {
 function updateDebtTime() {
   debtTime = (weeks*10*60-totalTimeFocused/60<0) ? 0 : weeks*10*60-totalTimeFocused/60;
   if (debtTime>0) {
+    streakFire.classList.add('hidden');
+    totalStreak.innerHTML = `0 WEEK`;
     let debtHours = Math.floor(debtTime/60);
     let debtMins = Math.floor(debtTime%60);
     debtTimePara.innerHTML = `Time left to get streak: ${debtHours} hours ${debtMins} minutes`;
   }
   else {
-    let hoursNeed = ((weeks+1)*10*60-totalTimeFocused<0) ? 0 : (weeks+1)*10*60-totalTimeFocused;
+    streakFire.classList.remove('hidden');
+    totalStreak.innerHTML = `${weeks} WEEKS`;
+    let hoursNeed = ((weeks+1)*10*60-totalTimeFocused/60<0) ? 0 : (weeks+1)*10*60-totalTimeFocused/60;
     let hour = Math.floor(hoursNeed/60);
     let mins = Math.floor(hoursNeed%60);
     debtTimePara.innerHTML = `Time need to hold this streak: ${hour} hours ${mins} minutes`;
